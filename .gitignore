@@ -1,0 +1,50 @@
+# virtual environment
+.venv/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# data 
+data/raw/
+data/processed/
+
+# model artifacts
+models/
+*.pt
+*.pth
+*.ckpt
+
+# output embeddings
+*.h5
+*.hdf5
+
+# environment and secrets
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# logs
+*.log
+logs/
+
+# reports generated at runtime 
+reports/*.png
+reports/*.pdf

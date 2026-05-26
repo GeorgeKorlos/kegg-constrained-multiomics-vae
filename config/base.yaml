@@ -1,0 +1,40 @@
+project:
+  name: p2_multiomics_vae
+  version: "0.1.0"
+
+data:
+  raw_dir: data/raw/
+  processed_dir: data/processed/
+  transcriptomics_file: OmicsExpressionProteinCodingGenesTPMLogp1.csv
+  metabolomics_file: OmicsMetabolites.csv
+  depmap_release: null   # fill on day 2
+  min_paired_samples: 800
+
+kegg:
+  version: "118.0"
+  release_date: "May 2026"
+
+output:
+  embedding_dim: 128
+  dtype: float32
+  normalization: L2
+  format: hdf5
+
+model:
+  # locked later — do not populate yet
+  architecture: null
+  latent_dim: null
+  kegg_constraint: null
+
+training:
+  # locked later
+  seed: null
+  batch_size: null
+  epochs: null
+  learning_rate: null
+
+identifiers:
+  protein_namespace: UniProt
+  metabolite_namespace: KEGG_compound
+  isoform_policy: canonical_only
+  species: Homo sapiens
