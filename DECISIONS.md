@@ -90,7 +90,7 @@ Samples are cancer cell lines, not primary tissue — embeddings reflect a cance
 biology. This is appropriate for the intended downstream task but limits generalizability
 claims to primary tissue or organismal contexts.
 
-DepMap release: [fill in on day 2]. SHA256: [fill in on day 2 in PROVENANCE.md].
+DepMap release: 25Q2 for the transcriptomics, CCLE 2019 for metabolomics for the metabolomics. SHA256: 
 
 ---
 
@@ -104,6 +104,26 @@ metabolite coverage) before the dataset becomes underpowered for VAE training at
 latent dimensionality. Below 800, the latent space partition into K KEGG module blocks risks
 insufficient samples-per-block for gradient signal. If paired N falls below 800 after QC,
 stop and re-evaluate the data source before proceeding.
+
+---
+
+## [D-006] Metabolite Missing Value Imputation
+
+* **Options considered**: zero-fill, KNN imputation, minimum value imputation,
+  drop samples with >X% missing
+* **Choice**: no action required
+* **Rationale**: Source file (CCLE_metabolomics_20190502.csv) is pre-imputed and
+  clean at source. Confirmed no NaNs in loaded dataframe. Imputation is not a
+  pipeline responsibility.
+
+---
+
+## [D-007] Metabolite Detection Rate Threshold
+
+* **Options considered**: 50%, 70%, 80% detection rate thresholds
+* **Choice**: no action required
+* **Rationale**: Source file is pre-filtered and clean at source. No metabolites
+  need to be dropped on detection rate grounds. Threshold decision is moot.
 
 ---
 
@@ -126,20 +146,3 @@ corresponding to a KEGG module, with overlap handled via learned soft weights
 * **Risk**: installing torch==2.3.1 without specifying CUDA version silently installs the CPU
 build on some systems. Verify with `torch.cuda.is_available()` in 00_check_environment.py.
 
----
-
-## [OPEN-003] Metabolite Missing Value Imputation
-
-* **Options under consideration**: zero-fill (treats missing as below detection), KNN imputation,
-minimum value imputation per metabolite, drop samples with >X% missing
-* **Decision gate**: day 3 QC output — missing value rate distribution determines which
-strategies are viable
-
----
-
-## [OPEN-004] Metabolite Detection Rate Threshold
-
-* **Tentative**: drop metabolites detected in fewer than 50% of samples
-* **Decision gate**: day 3 QC output
-* **Risk**: too aggressive a threshold reduces the metabolite vocabulary below what KEGG
-compound coverage requires for the constraint to be meaningful
