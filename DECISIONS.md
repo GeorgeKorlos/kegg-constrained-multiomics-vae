@@ -125,6 +125,41 @@ stop and re-evaluate the data source before proceeding.
 * **Rationale**: Source file is pre-filtered and clean at source. No metabolites
   need to be dropped on detection rate grounds. Threshold decision is moot.
 
+## [D-008] Low-Variance Gene Threshold
+
+* **Options considered**: 0.01 (987 genes, 5.1%), 0.05 (1821 genes, 9.5%),
+  0.10 (2328 genes, 12.1%), 0.20 (3004 genes, 15.6%), 0.50 (7625 genes, 39.7%)
+* **Choice**: variance < 0.05 — drop 1821 genes, retain 17,384
+* **Rationale**: The variance distribution shows a dense cluster of near-zero
+  variance genes below 0.05. Above this threshold the removal becomes a judgment
+  call rather than a clear uninformative boundary. 0.01 is too conservative —
+  genes with variance 0.01–0.05 have essentially flat expression across 1684
+  cell lines and contribute no gradient signal to the VAE encoder. 0.50 removes
+  39.7% of the feature space, which is too aggressive. 0.05 captures the natural
+  low-variance cluster without excessive feature loss.
+
+---
+
+## [D-009] Expression Outlier Threshold — Transcriptomics
+
+* **Options considered**: 2 SD, 3 SD, IQR-based
+* **Choice**: 3 SD from mean total expression per sample
+* **Rationale**: 15 samples flagged out of 1684 (0.9%). Distribution of sample
+  total expression is tight (mean 51346, std 3731) — flagged samples are genuine
+  outliers, not artifacts of a skewed distribution. 3 SD is a standard conservative
+  threshold that avoids over-removing samples while catching true anomalies.
+
+---
+
+## [D-010] Expression Outlier Threshold — Metabolomics
+
+* **Options considered**: 2 SD, 3 SD, IQR-based
+* **Choice**: 3 SD from mean total metabolite level per sample
+* **Rationale**: 11 samples flagged out of 928 (1.2%). Metabolomics sample totals
+  are extremely tight (mean 1322, std 7.4) — the data is heavily normalized at
+  source. Flagged samples are clear anomalies. No overlap with transcriptomics
+  outliers — independent quality issues in each modality.
+
 ---
 
 ## [OPEN-001] KEGG Constraint Mechanism
