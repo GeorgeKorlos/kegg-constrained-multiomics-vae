@@ -104,6 +104,7 @@ metabolite coverage) before the dataset becomes underpowered for VAE training at
 latent dimensionality. Below 800, the latent space partition into K KEGG module blocks risks
 insufficient samples-per-block for gradient signal. If paired N falls below 800 after QC,
 stop and re-evaluate the data source before proceeding.
+* **Confirmed post-QC paired N**: 898 (above 800 floor, PASS)
 
 ---
 
@@ -181,3 +182,13 @@ corresponding to a KEGG module, with overlap handled via learned soft weights
 * **Risk**: installing torch==2.3.1 without specifying CUDA version silently installs the CPU
 build on some systems. Verify with `torch.cuda.is_available()` in 00_check_environment.py.
 
+## [OPEN-005] Encoder Architecture Symmetry
+
+* **Flag**: Transcriptomics and metabolomics have different intrinsic
+  dimensionalities — transcriptomics requires >50 PCs for 80% variance,
+  metabolomics reaches 80% within ~48 PCs. A symmetric encoder design
+  may underserve the transcriptomics modality.
+* **Options under consideration**: symmetric encoder (same depth and width
+  for both modalities), asymmetric encoder (deeper or wider transcriptomics
+  encoder), shared encoder with modality-specific input projection layers
+* **Decision gate**: preregistration document before any model code
