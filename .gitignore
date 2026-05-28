@@ -48,3 +48,4 @@ logs/
 # reports generated at runtime 
 reports/*.png
 reports/*.pdf
+reports/*.csv
