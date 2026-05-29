@@ -84,7 +84,7 @@ from the product-of-experts fusion of both modality encoders.
 **KEGG regularization**
 
 ```
-L_KEGG = (1 / K(K-1)) · Σ_{k≠l} || Cov_batch(z_k, z_l) ||²_F
+L_KEGG = z_k ∈ ℝ^(B × b_k)
 ```
 
 Where z_k ∈ ℝ^(B × b) is the sub-vector of the latent corresponding to block k
@@ -213,7 +213,8 @@ modality is contributing negligible gradient signal.
 ## Section 3 — Tensor-Level Data Flow
 
 Shapes use: B = batch size, F_t = 17,384, F_m = 225, d = 128, K = TBD (post week 2),
-b = d/K (block size, must satisfy d % K == 0 — verified before training).
+b_k = block size for module k, Σ b_k = 128, b_k ≥ 2, allocated proportionally to module gene count
+Block sizes vary by module to reflect KEGG module size. Block size table logged in reports/kegg_coverage.md.
 
 ```
 INPUT
