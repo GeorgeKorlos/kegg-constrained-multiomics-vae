@@ -49,3 +49,6 @@ logs/
 reports/*.png
 reports/*.pdf
 reports/*.csv
+
+# scratch files
+scratch/
