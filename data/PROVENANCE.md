@@ -32,3 +32,26 @@
 * **Join type**: inner
 * **Paired N**: 912
 * **Status**: PASS (above 800 floor)
+
+## File 3 — kegg_module_gene_membership.tsv
+* Release: KEGG 118.0+/05-29
+* Fetch date: 2026-05-29
+* Source endpoints: /link/hsa/module + /list/hsa (HGNC symbol map)
+* SHA256: 77741ce0fdbf86bc2dedfeb2632633fdf196bab112def386ba4f094578d68e82
+* Rows: 1075
+* Unique modules: 131
+* Unique HGNC symbols: 832
+* Symbol-map misses: 1426 (pseudogenes, uncharacterized loci)
+* Join misses: 3 (deprecated KEGG entries)
+
+## File 4 — kegg_module_compound_membership.tsv
+* SHA256: a85688084f904667ae3667a099a5648267e20eb295f68e1737383b4fffbdafe3
+* Source endpoint: /link/compound/module
+* Rows: 3537
+* Unique modules: 507
+* Unique compounds: 2031
+
+## File 5 — kegg_module_metadata.tsv
+* SHA256: ee15b2c7a0bcca391f30ef87329c27fe6945c6a0591cb800dfd78a6a29909aaf
+* Source endpoint: /list/module
+* Total modules: 573
