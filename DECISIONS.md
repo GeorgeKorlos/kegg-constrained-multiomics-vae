@@ -160,6 +160,22 @@ stop and re-evaluate the data source before proceeding.
   are extremely tight (mean 1322, std 7.4) — the data is heavily normalized at
   source. Flagged samples are clear anomalies. No overlap with transcriptomics
   outliers — independent quality issues in each modality.
+  
+---
+
+## [D-011] Latent block size allocation
+
+* Options considered:
+  - Equal-size blocks (b = 128/K) — fails when K > 64
+  - Proportional allocation with min floor — chosen
+  - Increase latent_dim to 512 — rejected, breaks P3 contract
+* Choice: b_k = max(2, round(128 * s_k / Σ s_k)), adjusted to sum to 128
+* Rationale: K is at most 131 pre-CCLE-filter, likely 100-120 post-filter.
+  Equal blocks force b < 2 which is not a meaningful sub-vector. Proportional
+  allocation aligns latent capacity with module size, preserves the 128-dim
+  contract, and requires no change to the loss formulation — Frobenius norm
+  of cross-block covariance is shape-agnostic.
+* Block size table to be generated and logged at Day 4 alongside K.
 
 ---
 
