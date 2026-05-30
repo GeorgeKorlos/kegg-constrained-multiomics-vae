@@ -12,6 +12,17 @@ a VAE trained on the same data without the KEGG prior, and this difference in
 coherence translates to a measurable performance advantage in the downstream P3 graph
 task.
 
+**Coverage note:** The KEGG constraint applies fully to transcriptomics
+(832 of 17,384 CCLE genes have module annotations, ~5%) and partially
+to metabolomics (104 of 225 CCLE metabolites have KEGG compound IDs,
+~46%; see D-012). Metabolites without KEGG annotations are retained
+in training and contribute to reconstruction loss but not to L_KEGG
+(D-013). This makes the architecture a *partially KEGG-constrained
+multi-omics VAE with modality-dependent metabolite coverage*. The
+falsifiable claim below is evaluated over the mapped subset on the
+metabolite side; the gene side is evaluated over the full module-annotated
+gene set.
+
 Two sub-claims, each independently falsifiable:
 
 **Claim A — Biological coherence:** In the KEGG-constrained VAE, genes and metabolites
@@ -441,6 +452,22 @@ the claim is falsified and ablation comparisons are moot.
   design (Step 4, condition A vs B) is designed to isolate this contribution
   independently of the correlation strength.
 
+- Metabolite-side KEGG coverage is structurally bounded at 46.2% of the
+  225-panel (104 mapped). The unmapped 47% are dominated by LC-MS lipid
+  species (C##:# LPC/PC/SM/CE/TAG) below KEGG's compound-level resolution
+  and by isobaric mixtures the instrument cannot resolve to a single
+  compound. Coverage gap is structural, not a mapping pipeline failure.
+  See D-012.
+- High-variance lipid features may dominate reconstruction gradient and
+  pull latent capacity away from KEGG-aligned structure. The KEGG term
+  operates on the latent partition, but the partition is shaped by what
+  the encoders push into it. Risk: KEGG signal becomes secondary
+  substructure in a lipid-dominated latent. Logged as OPEN-007.
+  Post-hoc diagnostic added in Section 7.
+- All four pathway activity score pathways (glycolysis, serine biosynthesis,
+  TCA, one-carbon metabolism) fall within the mapped metabolite subset.
+  Section 4 Step 3 validation set is unaffected by the coverage limit.
+
 ---
 
 ## Section 7 — Planned Diagnostics
@@ -459,6 +486,19 @@ the claim is falsified and ablation comparisons are moot.
   prevents modality dominance.
 - Block variance heatmap (K × epochs) — visual confirmation Guard 2 is not close
   to firing in the primary run.
+- **Lipid-driven drift check (post-hoc, not a guard):** After training
+  the primary model, compute mean Var(z_k) on the validation set for
+  blocks corresponding to KEGG modules whose detected metabolites are
+  exclusively from the mapped subset (i.e., central metabolites, not
+  lipid species). Compare to the mean variance of the latent dimensions
+  that absorb the unconstrained metabolite signal (computed by removing
+  KEGG-block dimensions and measuring residual variance attributable to
+  unmapped metabolite reconstruction). If KEGG-block variance is
+  uniformly suppressed below unconstrained-residual variance, the latent
+  space is lipid-dominated and the KEGG signal is secondary. This is a
+  reporting requirement, not a halt condition — but a positive finding
+  triggers OPEN-007 resolution (re-weight, accept, or invoke hard-masking
+  fallback per D-011 architecture fallback path).
 
 ---
 
