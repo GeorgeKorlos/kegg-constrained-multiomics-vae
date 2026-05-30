@@ -79,3 +79,30 @@
       as zero-rows in the metabolite-module membership matrix (Day 4).
     - Coverage limit is structural — LC-MS lipid species below KEGG's
       compound-level resolution. See D-012, OPEN-007.
+
+## File 7 — gene_module_matrix.npy
+* Generated: 2026-05-30
+* Shape: (17384, 235)
+* dtype: float32
+* SHA256: 1463998ae812e6c139c6b4062a13e9cefe936a858096bb0bbab82aafe239f2af
+* Notes: row order matches data/processed/gene_names.csv;
+        column order matches data/processed/module_ids.csv;
+        1006 gene-module links across 130 CCLE-detected modules.
+
+## File 8 — metabolite_module_matrix.npy
+* Generated: 2026-05-30
+* Shape: (225, 235)
+* dtype: float32
+* SHA256: 91ce140473933a4443135255dff55a83bd59f9ab9c0069602a1aa4cb95d4afa4
+* Notes: row order matches data/processed/metabolite_names.csv;
+        column order matches data/processed/module_ids.csv;
+        250 metabolite-module links across 154 CCLE-detected modules;
+        171 unmapped+module-orphan metabolites have all-zero rows (D-013).
+
+## File 9 — module_ids.csv
+* Generated: 2026-05-30
+* Rows: 235
+* SHA256: 17c97f54083fb7fe1be97ab306f1ce52e5cbd1afdbe3f25ec9f4f424477143c2
+* Notes: lexically sorted union of CCLE-detected KEGG modules
+        (130 gene-side + 154 metabolite-side, 49 in both).
+        Column order for both membership matrices.

@@ -176,6 +176,22 @@ stop and re-evaluate the data source before proceeding.
   contract, and requires no change to the loss formulation — Frobenius norm
   of cross-block covariance is shape-agnostic.
 * Block size table to be generated and logged at Day 4 alongside K.
+* Revised retention: only "both" modules (49) retained for block partition.
+  Single-modality modules (gene-only 81, metabolite-only 105) excluded
+  from the latent block partition to keep b_k ≥ 2. They are documented
+  in the membership matrices but are not assigned to latent dimensions.
+* **Confirmed at Day 4:** K = 235 (49 modules in both modalities, 81 gene-only,
+  105 metabolite-only). This is substantially larger than the 100–120 estimate
+  at preregistration time.
+* **Block allocation problem:** with K = 235, minimum total dim if every block
+  gets b_k ≥ 2 is 470 > 128. The min-floor of 2 is incompatible with K = 235
+  at latent_dim = 128.
+* **Decision deferred to Day 5:** the choice between (a) dropping the min-floor
+  (allowing b_k = 1 for small modules), or (b) retaining only the 49 "both"
+  modules for the latent block partition while keeping single-modality modules
+  in the membership matrices for reporting, is logged for Day 5 resolution
+  alongside the coverage report. The cleaner architectural path is (b) — see
+  Day 5 deliverable.
 
 ---
 
@@ -201,6 +217,14 @@ stop and re-evaluate the data source before proceeding.
   named pathways (glycolysis, serine biosynthesis, TCA, one-carbon) fall
   within the mapped subset. Validation set is sufficient. Section 6
   updated to flag coverage constraint explicitly.
+* Additionally observed: of the 104 KEGG-mapped metabolites, only 54 
+  belong to any KEGG module. The other 50 have valid KEGG compound IDs 
+  but are not catalogued in any module (e.g., NADP, 1-methylnicotinamide, 
+  2-hydroxyglutarate). Effective KEGG-constrained subset is 54/225 
+  (24.0%). The 50 module-orphan metabolites are treated identically to 
+  the 105 fully-unmapped metabolites per D-013: retained in training, 
+  contribute to reconstruction loss, receive zero-rows in the 
+  metabolite-module matrix.
 
 ---
 
