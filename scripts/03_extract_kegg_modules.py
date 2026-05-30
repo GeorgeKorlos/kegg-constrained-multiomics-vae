@@ -63,6 +63,8 @@ def fetch_gene_module_links() -> list[tuple[str, str]]:
         for p in (a, b):
             if p.startswith("md:"):
                 module_id = p.replace("md:", "", 1)
+                if module_id.startswith("hsa_"):
+                    module_id = module_id.replace("hsa_", "", 1)
             elif p.startswith("hsa:"):
                 hsa_id = p.replace("hsa:", "", 1)
 

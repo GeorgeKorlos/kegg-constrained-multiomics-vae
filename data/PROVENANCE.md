@@ -37,7 +37,7 @@
 * Release: KEGG 118.0+/05-29
 * Fetch date: 2026-05-29
 * Source endpoints: /link/hsa/module + /list/hsa (HGNC symbol map)
-* SHA256: 77741ce0fdbf86bc2dedfeb2632633fdf196bab112def386ba4f094578d68e82
+* SHA256: bf72dbfaf31ea29bd0072c63999027e791a26a2079b9fb4e03990e208464317e
 * Rows: 1075
 * Unique modules: 131
 * Unique HGNC symbols: 832
