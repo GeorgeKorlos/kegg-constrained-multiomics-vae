@@ -179,6 +179,57 @@ stop and re-evaluate the data source before proceeding.
 
 ---
 
+
+## [D-012] Metabolite KEGG coverage limit
+
+* **Observed**: 104/225 (46.2%) of CCLE metabolites map to a KEGG compound ID
+  (81 via /find/compound exact synonym match, 23 via manual review and
+  unmapped-set sweep). 16 additional metabolites have PubChem cross-references
+  only. 105 are fully unmapped.
+* **Cause**: ~85% of unmapped entries are LC-MS-resolved lipid species
+  (C##:# LPC/LPE/PC/SM/DAG/CE/TAG). KEGG catalogs lipid classes, not
+  species-level resolution. ~12% are isobaric mixtures (e.g.,
+  DHAP/glyceraldehyde 3P, UDP-galactose/UDP-glucose) the instrument cannot
+  separate into single compounds.
+* **Consequence**: ~54% of CCLE metabolites are unconstrained by L_KEGG —
+  they contribute to reconstruction loss but receive no signal from the
+  KEGG regularization term.
+* **Mitigation**: none feasible. Lipid species are not in KEGG at this
+  resolution. Isobaric mixtures cannot be assigned to a single compound.
+* **Implication for preregistration**: Section 4 Step 3 (pathway activity
+  validation) coverage is bounded by the 104 mapped metabolites. All four
+  named pathways (glycolysis, serine biosynthesis, TCA, one-carbon) fall
+  within the mapped subset. Validation set is sufficient. Section 6
+  updated to flag coverage constraint explicitly.
+
+---
+
+## [D-013] Unmapped metabolites retained in training, unconstrained by KEGG
+
+* **Context**: 105 of 225 CCLE metabolites have no KEGG compound ID
+  (see D-012).
+* **Options considered**:
+  - (a) Retain in training — pass through encoder/decoder, contribute to
+        reconstruction loss, receive zero-rows in metabolite-module
+        membership matrix so L_KEGG does not act on them.
+  - (b) Drop from input — train on 104 mapped metabolites only.
+* **Choice**: (a) — retain all 225, mark unmapped as zero-rows in
+  membership matrix.
+* **Rationale**:
+  - Output contract is locked at 225 metabolite embeddings (P3-facing).
+    Dropping unmapped would break the contract and require portfolio
+    renegotiation.
+  - The architecture handles unconstrained features by construction
+    (zero rows in soft assignment matrix produce no KEGG gradient on
+    those entities).
+  - Reconstruction signal still produces usable embeddings for downstream.
+  - Drift risk on the unconstrained subset is logged in OPEN-007.
+* **Implication for evaluation**: Section 4 Step 2 (pathway coherence)
+  runs over the mapped subset only. Unmapped metabolites are not part of
+  the in-module vs out-of-module cosine comparison.
+
+---
+
 ## [OPEN-001] KEGG Constraint Mechanism
 
 * **Options under consideration**: regularization loss term penalizing cross-block covariance;
@@ -208,3 +259,32 @@ build on some systems. Verify with `torch.cuda.is_available()` in 00_check_envir
   for both modalities), asymmetric encoder (deeper or wider transcriptomics
   encoder), shared encoder with modality-specific input projection layers
 * **Decision gate**: preregistration document before any model code
+
+---
+
+## [OPEN-007] Metabolomics input scaling vs. lipid variance dominance
+
+* **Context**: ~54% of metabolites are unconstrained by L_KEGG and
+  retained via reconstruction loss only (D-013). LC-MS lipid species
+  typically have higher cross-sample variance than central metabolites,
+  so reconstruction loss — which is variance-weighted by construction —
+  may be dominated by lipid features. The KEGG term operates on the
+  latent partition, but the partition is shaped by what the encoders
+  push into it, which is shaped by reconstruction pressure. Risk: KEGG
+  signal becomes secondary structure in a lipid-dominated latent manifold.
+* **Current state**: metabolomics is per-feature standardized
+  (mean 0, std 1) in `src/data/transform.py`. This partially mitigates
+  the variance asymmetry at the input level but does not guarantee
+  balanced gradient at the loss level.
+* **Decision gate**: after the first ablation run completes, inspect
+  the lipid-driven drift diagnostic (preregistration Section 7). If
+  KEGG-block variance is suppressed below the unconstrained-residual
+  variance, consider:
+    (a) re-weight reconstruction loss to upweight KEGG-mapped metabolites
+    (b) variance-rank truncation on metabolomics input — REJECTED in
+        advance, breaks output contract
+    (c) accept the result and report lipid-dominant latent as a finding
+* **Architecture fallback**: hard masking (already in ablation matrix
+  as condition C) is the canonical alternative if soft assignment
+  proves dominated by unconstrained variance.
+* **Do not act before the data tells you to.**
