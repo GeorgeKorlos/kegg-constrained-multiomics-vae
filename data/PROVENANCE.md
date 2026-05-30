@@ -55,3 +55,27 @@
 * SHA256: ee15b2c7a0bcca391f30ef87329c27fe6945c6a0591cb800dfd78a6a29909aaf
 * Source endpoint: /list/module
 * Total modules: 573
+
+## File 6 — metabolite_kegg_mapping.csv
+
+* Generated: 2026-05-30
+* Method: KEGG /find/compound exact synonym match (kegg_exact)
+        + manual review and unmapped-set sweep (kegg_manual)
+        + PubChem /rest/pug/compound/name fallback (pubchem_only)
+* SHA256: 94c1b96a872114a85546c9fe859647f1cf908e7e2fd7bf2b38218b231c8ba2d6
+* Coverage:
+    kegg_exact:   81/225  (36.0%)
+    kegg_manual:  23/225  (10.2%)
+    pubchem_only: 16/225  (7.1%)
+    unmapped:    105/225  (46.7%)
+* KEGG-mapped total: 104/225 (46.2%)
+* Cross-ref total:   120/225 (53.3%)
+* Unmapped breakdown:
+    lipid species — KEGG class-level only:    89 (LC-MS C##:# LPC/LPE/PC/SM/DAG/CE/TAG)
+    isobaric mixture — no single KEGG ID:     13 (e.g., DHAP/glyceraldehyde 3P)
+    no KEGG entry:                             3
+* Notes:
+    - Unmapped metabolites are retained in training per D-013; they appear
+      as zero-rows in the metabolite-module membership matrix (Day 4).
+    - Coverage limit is structural — LC-MS lipid species below KEGG's
+      compound-level resolution. See D-012, OPEN-007.
