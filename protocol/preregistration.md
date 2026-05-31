@@ -399,6 +399,57 @@ direction of the effect and its confidence interval are the finding.
 completeness and because the portfolio claim depends on it. P2's internal evaluation
 stops at Step 3.
 
+### Step 3 — Biological validity (secondary)
+
+**Metrics:**
+
+*Pathway activity score correlation:* For each of four pathways, defined at
+**KEGG pathway-map granularity** (D-015) — broader than the module-level
+partition used for the latent constraint:
+
+- Glycolysis / Gluconeogenesis (`map00010`)
+- Citrate cycle / TCA (`map00020`)
+- Glycine, serine, threonine metabolism (`map00260`)
+- One-carbon pool by folate (`map00670`)
+
+Compute:
+- Gene pathway activity = mean standardized expression of pathway genes
+- Metabolite pathway activity = mean standardized level of pathway
+  metabolites present in the 225-metabolite panel
+- Pearson r and Spearman ρ between gene and metabolite pathway activity scores
+
+The per-pathway CCLE-mapped metabolite counts are documented in
+`reports/kegg_coverage.md` and stored in
+`data/processed/pathway_metabolite_membership.csv`. Counts:
+
+| Pathway map | CCLE-mapped metabolites |
+|---|---|
+| map00010 (Glycolysis) | 2 (descriptive only) |
+| map00020 (TCA) | 6 |
+| map00260 (Ser/Gly/Thr) | 10 |
+| map00670 (One-carbon) | 10 |
+
+**Glycolysis caveat:** map00010 retains 2 mapped metabolites due to CCLE
+LC-MS panel limitations (isobaric hexose intermediates and absent pyruvate
+— see D-012). The glycolysis pathway activity score is reported as
+descriptive, not inferential. The pass condition below is unaffected; the
+three other pathways carry the validation.
+
+*Block alignment:* Check whether the latent block assigned to module k has
+higher mutual information with the pathway activity score of module k's
+parent pathway map than with scores of other pathways. This is a posterior
+check that the block partition is doing what the KEGG prior intends.
+
+**Pass condition:** Pearson r > 0 for at least 3 of 4 pathways in the
+constrained model. No explicit threshold on block alignment — reported
+descriptively.
+
+**Failure implication:** If pathway activity correlations are zero in both
+constrained and unconstrained models, the signal is too weak to validate
+the biological claim. This is a known risk given the weak cross-modality
+correlation (r = 0.028 at global level, weak signal detectable only at pair
+level). The ablation (Section 5) is designed to diagnose this scenario.
+
 ---
 
 ## Section 5 — Ablation Matrix
@@ -467,6 +518,9 @@ the claim is falsified and ablation comparisons are moot.
 - All four pathway activity score pathways (glycolysis, serine biosynthesis,
   TCA, one-carbon metabolism) fall within the mapped metabolite subset.
   Section 4 Step 3 validation set is unaffected by the coverage limit.
+- KEGG ID coverage and module coverage are not equivalent: 104 metabolites 
+  have KEGG IDs but only 54 of those have module memberships. The effective 
+  KEGG-constrained metabolite subset is 54/225 (24%), not 46%.
 
 ---
 

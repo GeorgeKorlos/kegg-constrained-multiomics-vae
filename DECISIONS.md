@@ -192,6 +192,11 @@ stop and re-evaluate the data source before proceeding.
   in the membership matrices for reporting, is logged for Day 5 resolution
   alongside the coverage report. The cleaner architectural path is (b) — see
   Day 5 deliverable.
+* **Resolved at Day 5:** K = 49 (both-modality only). Block sizes computed
+  from gene counts per module, min floor b_k = 2, Σ b_k = 128. min(b_k) = 2,
+  max(b_k) = 4, median = 3. 25 of 49 modules at the floor.
+  Per-module table in `data/processed/block_sizes.csv` (SHA e51f28cad25be12217dd6fb81613b23bc677685a90eb0cf72ab455c7462e5f4f).
+  See `reports/kegg_coverage.md` for full statistics.
 
 ---
 
@@ -225,6 +230,12 @@ stop and re-evaluate the data source before proceeding.
   the 105 fully-unmapped metabolites per D-013: retained in training, 
   contribute to reconstruction loss, receive zero-rows in the 
   metabolite-module matrix.
+* **Refined at Day 4:** of the 104 KEGG-mapped metabolites, only 54 are
+  members of any KEGG module. The other 50 have valid KEGG compound IDs
+  but no module annotation (e.g., NADP, 2-hydroxyglutarate, 4-pyridoxate).
+  Effective KEGG-constrained metabolite subset is 54/225 (24.0%), not 46.2%.
+  The 50 module-orphan metabolites are treated identically to the 105
+  fully-unmapped metabolites per D-013.
 
 ---
 
@@ -251,6 +262,85 @@ stop and re-evaluate the data source before proceeding.
 * **Implication for evaluation**: Section 4 Step 2 (pathway coherence)
   runs over the mapped subset only. Unmapped metabolites are not part of
   the in-module vs out-of-module cosine comparison.
+
+---
+
+---
+
+## [D-014] Single-modality modules excluded from latent partition
+
+* **Context:** Day 4 found 235 KEGG modules with at least one CCLE entity.
+  Of these, only 49 have both gene and metabolite annotations. 81 are
+  gene-only, 105 are metabolite-only.
+* **Options considered:**
+  - (a) K = 235 (full union) — accept b_k = 1 for many blocks.
+  - (b) K = 49 (both-modality only) — single-modality modules documented
+        in the membership matrices but excluded from latent partition.
+* **Choice:** (b)
+* **Rationale:**
+  - The KEGG constraint's theoretical justification is cross-modality
+    coherence. Single-modality blocks cannot be evaluated for cross-block
+    KEGG-aligned variance.
+  - The loss term L_KEGG = Σ_{k≠l} ||Cov(z_k, z_l)||²_F is degenerate
+    when blocks have no anchor in one modality.
+  - K = 49 with b_k ≥ 2 fits cleanly within latent_dim = 128.
+  - Section 4 Step 2 (cross-modality coherence test) requires both-modality
+    annotation to be meaningful.
+* **Implications:**
+  - Section 4 Step 2 evaluates over 49 modules.
+  - 186 single-modality modules are retained in `gene_module_matrix.npy`
+    and `metabolite_module_matrix.npy` (235 columns) for downstream use
+    (P3 may consume the full membership table independently).
+  - Latent partition obtained at model load time by slicing matrices to
+    49 columns where both matrices have non-zero column sums.
+
+---
+
+## [D-015] Pathway activity score validation at pathway-map granularity
+
+* **Context:** KEGG module-level coverage of the CCLE-mapped metabolite set
+  is thin for several validation pathways (Section 4 Step 3): glycolysis
+  module M00001 has 2 mapped metabolites, serine biosynthesis module M00020
+  has 2, TCA module M00009 has 4, one-carbon module M00141 not in retained 49.
+  This is a structural limit of CCLE LC-MS coverage vs KEGG module definitions
+  (see D-012), not a matrix construction failure.
+* **Options considered:**
+  - (a) Pathway-map granularity (`map00010`, `map00020`, `map00260`, `map00670`).
+  - (b) Union of related modules per pathway.
+  - (c) Accept module-level thin coverage; demote Section 4 Step 3 to
+        descriptive.
+* **Choice:** (a)
+* **Rationale:**
+  - Pathway maps are KEGG-native broader units that include peripheral
+    metabolites absent from tight module definitions.
+  - Per-pathway coverage rises from 2-4 to 6-10 metabolites (3 of 4 pathways),
+    enabling meaningful Pearson and Spearman correlations.
+  - Decouples the structural prior (module-level, K=49, D-014) from the
+    validation metric (pathway-map-level). Fine prior + broad validation
+    is a stronger methodological setup than same-granularity for both.
+  - Does not modify the latent partition or L_KEGG. Affects only
+    Section 4 Step 3 computation.
+* **Implementation:** `scripts/05b_pathway_validation_set.py` fetches
+  `/link/compound/pathway` (reference map IDs, species-agnostic), filters
+  to four named pathway maps and the 104 KEGG-mapped CCLE metabolites,
+  saves `data/processed/pathway_metabolite_membership.csv`.
+* **Per-pathway counts:**
+  - map00010 (Glycolysis): 2 (descriptive only — CCLE panel limit)
+  - map00020 (TCA cycle): 6
+  - map00260 (Glycine/Serine/Threonine): 10
+  - map00670 (One-carbon pool by folate): 10
+* **Glycolysis caveat:** map00010 retains 2 mapped metabolites
+  (3-phosphoglycerate, PEP) because:
+  - Phosphorylated hexose intermediates appear as isobaric mixtures in
+    CCLE (D-012).
+  - Pyruvate is not in the CCLE targeted LC-MS panel.
+  Glycolysis pathway activity is reported as **descriptive, not inferential**.
+  Section 4 Step 3 pass condition (Pearson r > 0 for ≥3 of 4 pathways) is
+  unaffected.
+* **Note on prefix:** Pathway-compound links from `/link/compound/pathway`
+  return `map`-prefixed IDs (species-agnostic). The four IDs above use the
+  `map` prefix accordingly. Human specificity enters via the CCLE-mapped
+  metabolite filter on the join, not via the pathway ID prefix.
 
 ---
 
