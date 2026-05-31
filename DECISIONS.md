@@ -363,16 +363,31 @@ corresponding to a KEGG module, with overlap handled via learned soft weights
 * **Risk**: installing torch==2.3.1 without specifying CUDA version silently installs the CPU
 build on some systems. Verify with `torch.cuda.is_available()` in 00_check_environment.py.
 
-## [OPEN-005] Encoder Architecture Symmetry
+## [OPEN-005] Encoder Architecture Symmetry — CLOSED 
 
-* **Flag**: Transcriptomics and metabolomics have different intrinsic
-  dimensionalities — transcriptomics requires >50 PCs for 80% variance,
-  metabolomics reaches 80% within ~48 PCs. A symmetric encoder design
-  may underserve the transcriptomics modality.
-* **Options under consideration**: symmetric encoder (same depth and width
-  for both modalities), asymmetric encoder (deeper or wider transcriptomics
-  encoder), shared encoder with modality-specific input projection layers
-* **Decision gate**: preregistration document before any model code
+* **Status**: RESOLVED. Unblocks model code per preregistration gate.
+* **Options considered**: symmetric encoder (identical depth/width both modalities),
+  asymmetric encoder (deeper transcriptomics), shared encoder with modality-specific
+  input projection
+* **Choice**: asymmetric — 3-layer transcriptomics encoder, 2-layer metabolomics encoder
+* **Architecture**:
+  - Transcriptomics: 17,384 → 1024 → 512 → 256 (=2×128). LayerNorm + GELU on the two
+    hidden layers; final projection raw, split to μ, logσ².
+  - Metabolomics: 225 → 256 → 256 (=2×128). LayerNorm + GELU on the single hidden
+    layer; final projection raw.
+  - logσ² clamped to [-10, 10] for PoE precision stability.
+* **Rationale**:
+  - QC (reports/qc_summary.md): transcriptomics 50 PCs → ~56% variance, 80% not reached
+    within 50 PCs; metabolomics 50 PCs → ~82%, 80% by ~48 PCs. Intrinsic-dimensionality
+    gap is large, not marginal. Symmetric depth forces one modality off its natural
+    capacity.
+  - Shared-trunk encoder rejected: 17,384-dim vs 225-dim input spaces and their manifolds
+    are too dissimilar to share trunk weights meaningfully.
+  - PoE fusion (prereg §3) is depth-agnostic — asymmetry does not affect joint posterior.
+* **Cascade**: None. Encoder depth is internal to P2; output contract (D-001) unchanged.
+  P3/P5 unaffected.
+* **Day 2 constraint**: decoder hidden dims mirror these (prereg §3 — decoder symmetric
+  to encoder). Baseline decoder unconstrained — no soft assignment.
 
 ---
 

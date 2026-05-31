@@ -1,0 +1,9 @@
+model:
+  architecture: asymmetric_dual_encoder_poe
+  latent_dim: 128
+  fusion: product_of_experts
+  logvar_clamp: [-10.0, 10.0]
+  encoder:
+    transcriptomics_hidden: [1024, 512]
+    metabolomics_hidden: [256]
+  kegg_constraint: null   # baseline is unconstrained; activated week 4+
