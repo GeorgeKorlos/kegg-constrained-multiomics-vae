@@ -106,3 +106,36 @@
 * Notes: lexically sorted union of CCLE-detected KEGG modules
         (130 gene-side + 154 metabolite-side, 49 in both).
         Column order for both membership matrices.
+
+## File 10 — pathway_metabolite_membership.csv
+
+* Generated: 2026-05-31
+* Source: `scripts/05b_pathway_validation_set.py`
+* Method: KEGG /link/compound/pathway (reference map IDs, species-agnostic)
+        filtered to four target pathway maps and CCLE kegg_exact + kegg_manual
+* SHA256: 461bb1bc4e946e9a14254d4b55910e8bd41bc428f42566959acda813bc37e3a7
+* Rows: 28
+* Per-pathway counts:
+    map00010 (Glycolysis): 2 (descriptive only — CCLE panel limit)
+    map00020 (TCA cycle): 6
+    map00260 (Glycine/Serine/Threonine): 10
+    map00670 (One-carbon pool by folate): 10
+* Per D-015 — pathway-map granularity for Section 4 Step 3 validation.    
+  
+## File 11 — block_sizes.csv
+
+* Generated: 2026-05-31
+* Source: `scripts/05a_compute_block_size.py`
+* Shape: 49 rows × 5 columns
+* Columns: module_id, module_name, s_k (gene count), s_k_metabolites, block_size
+* SHA256: e51f28cad25be12217dd6fb81613b23bc677685a90eb0cf72ab455c7462e5f4f
+* Per D-011 (revised) and D-014. Latent block allocation table:
+    K = 49 modules
+    Σ b_k = 128
+    min(b_k) = 2
+    max(b_k) = 4
+    median(b_k) = 3
+    Modules at floor (b_k = 2): 25
+* Notes: gene-count-weighted allocation. s_k_metabolites is informational
+        (allocation is gene-weighted because gene branch has substantially
+        more KEGG-annotated entities: 778 vs 54).
