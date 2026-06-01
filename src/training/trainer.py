@@ -1,6 +1,7 @@
 import json
 import torch
 import hashlib
+import pandas as pd
 from pathlib import Path
 from torch.optim import Adam
 from torch.utils.data import TensorDataset, DataLoader
@@ -86,8 +87,28 @@ def guard3_r2(x_true, x_hat, eps=1e-8):
     return r2
 
 
-def make_partition_per_dim(latent_dim=128):
-    return [[i] for i in range(latent_dim)]
+def load_block_partition(
+    block_sizes_path="data/processed/block_sizes.csv", latent_dim=128
+):
+    """49-block KEGG partition. Contiguous slice of the 128-dim latent in
+    block_sizes.csv row order (= module_ids.csv lexical order).
+    Returns (partition, module_ids): partition[k] = dim indices of block k."""
+    df = pd.read_csv(block_sizes_path)
+    sizes = df["block_size"].astype(int).tolist()
+    module_ids = df["module_id"].tolist()
+
+    if sum(sizes) != latent_dim:
+        raise ValueError(
+            f"block_size sum {sum(sizes)} != latent_dim {latent_dim}. "
+            f"Wrong/corrupt block_sizes.csv (expected SHA e51f28c…)."
+        )
+
+    partition, start = [], 0
+    for b in sizes:
+        partition.append(list(range(start, start + b)))
+        start += b
+    assert start == latent_dim
+    return partition, module_ids
 
 
 def evaluate(model, x_trans, x_meta, beta, partition, guard2_counters, alpha, p):
@@ -122,7 +143,7 @@ def evaluate(model, x_trans, x_meta, beta, partition, guard2_counters, alpha, p)
         "guard2_failed": bool(guard2_failed),
         "guard3_trans_failed": bool(guard3_trans_failed),
         "guard3_meta_failed": bool(guard3_meta_failed),
-        "block_var": block_var.cpu(),
+        "block_var": block_var.cpu().tolist(),
         "guard2_counters": guard2_counters,
     }
 
@@ -205,7 +226,9 @@ def train(model, data, config):
         lr=lr,
     )
 
-    partition = make_partition_per_dim(LATENT_DIM)
+    partition, block_module_ids = load_block_partition(
+        config.get("block_sizes_path", "data/processed/block_sizes.csv")
+    )
 
     guard2_counters = [0] * len(partition)
 
@@ -219,7 +242,7 @@ def train(model, data, config):
         parents=True,
         exist_ok=True,
     )
-
+    shared_params = list(model.encoder.parameters())
     for epoch in range(epochs):
 
         model.train()
@@ -251,11 +274,7 @@ def train(model, data, config):
                 out["logvar_joint"],
             )
 
-            eta = compute_eta(
-                L_trans,
-                L_meta,
-                z,
-            )
+            eta = compute_eta(L_trans, L_meta, shared_params)
 
             eta_value = float(eta.detach().item())
 
@@ -338,4 +357,5 @@ def train(model, data, config):
         "history": history,
         "eta_log": eta_log,
         "best_val": best_val,
+        "block_module_ids": block_module_ids,
     }

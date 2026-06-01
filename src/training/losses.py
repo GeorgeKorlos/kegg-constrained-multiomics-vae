@@ -18,8 +18,20 @@ def kl_loss(mu, logvar):
     return kl.sum(dim=-1).mean() / LATENT_DIM
 
 
-def compute_eta(loss_trans, loss_meta, z, eps=1e-8):
-    g_trans = torch.autograd.grad(loss_trans, z, retain_graph=True)[0]
-    g_meta = torch.autograd.grad(loss_meta, z, retain_graph=True)[0]
-    eta = g_trans.norm() / (g_meta.norm() + eps)
-    return eta.detach()
+def compute_eta(loss_trans, loss_meta, shared_params, eps=1e-8):
+    g_trans = torch.autograd.grad(
+        loss_trans, shared_params, retain_graph=True, allow_unused=True
+    )
+    g_meta = torch.autograd.grad(
+        loss_meta, shared_params, retain_graph=True, allow_unused=True
+    )
+
+    def grad_norm(grads):
+        sq = [(g**2).sum() for g in grads if g is not None]
+        if not sq:
+            return torch.zeros((), device=loss_trans.device)
+        return torch.sqrt(torch.stack(sq).sum())
+
+    norm_trans = grad_norm(g_trans)
+    norm_meta = grad_norm(g_meta)
+    return (norm_trans / (norm_meta + eps)).detach()
