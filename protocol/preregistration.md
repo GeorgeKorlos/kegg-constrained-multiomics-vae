@@ -259,7 +259,8 @@ REPARAMETERIZATION
 
 BLOCK PARTITION
   z → [z_1 | z_2 | ... | z_K]
-  z_k: (B, b)  where b = 128/K
+  z_k: (B, b_k)  where b_k is proportional per D-011 (b_k ∈ [2,4], Σ b_k = 128);
+                 sizes in data/processed/block_sizes.csv
   Partition is a deterministic slice — no learned parameters at this step.
   Soft assignment weights w_{gk} (gene g → module k) are applied in the decoder,
   not at the partition step.

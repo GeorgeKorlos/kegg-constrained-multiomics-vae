@@ -139,3 +139,17 @@
 * Notes: gene-count-weighted allocation. s_k_metabolites is informational
         (allocation is gene-weighted because gene branch has substantially
         more KEGG-annotated entities: 778 vs 54).
+
+## Processed Training Tensors (derived — gitignored, reproducible)
+
+* Files: transcriptomics.npy, metabolomics.npy, transcriptomics_scaler.pkl,
+         metabolomics_scaler.pkl
+* Reproduction: `python src/data/transform.py`
+* Inputs determining output bytes (all pinned):
+    - data/raw/OmicsExpressionProteinCodingGenesTPMLogp1.csv (SHA e0326e16…)
+    - data/raw/CCLE_metabolomics_20190502.csv                (SHA 7c1d24aa…)
+    - data/splits/split_v1.json (SHA 85292785…) — scaler fits on TRAIN rows only (D-016)
+    - src/data/transform.py @ commit 1d9d49e630c9902d97919179c6418f27d307889a
+* Scaler: fit on 720 train rows only. Supersedes prior fit-on-full-898 artifacts (D-016).
+* Row order: inner-join on DepMap_ID; stability asserted in build_paired_dataset
+  against data/processed/sample_ids.csv.

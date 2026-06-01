@@ -344,6 +344,28 @@ stop and re-evaluate the data source before proceeding.
 
 ---
 
+## [D-016] Scaler refit on train split only (leakage correction)
+* Prior: StandardScaler fit on all 898 paired samples (Week-1, fit-on-full).
+* Correction: fit on 720 train rows from split_v1.json; transform all rows
+  with train statistics. Row-order stability asserted against sample_ids.csv;
+  split-n guard rejects mismatched splits.
+* Rationale: val/test statistics must not inform standardization — required
+  for clean held-out R² (Guard 3) and an uncompromised baseline-vs-constrained
+  comparison. Prior artifacts superseded.
+
+---
+
+## [D-017] Guard 4 η computed over shared encoder parameters θ
+* Prior impl: η = ||∇_z L_trans|| / ||∇_z L_meta|| (gradient at the latent).
+* Correction: η = ||∇_θ L_trans|| / ||∇_θ L_meta||, θ = both encoder branches'
+  parameters (model.encoder.parameters()), per prereg §3.
+* Note: the z-based version was functionally valid (autograd.grad on non-leaf
+  z does not require retain_grad and does not crash) but off-spec. θ is the
+  correct target for balancing optimizer updates, which act on θ not z.
+* Cost: ~2 extra full encoder-graph traversals per batch. Accepted for baseline.
+
+---
+
 ## [OPEN-001] KEGG Constraint Mechanism
 
 * **Options under consideration**: regularization loss term penalizing cross-block covariance;
